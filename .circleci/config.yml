@@ -1,0 +1,49 @@
+version: 2.1
+
+jobs:
+  install_edge:
+    docker:
+      - image: cimg/base:current  # Choose an appropriate Docker image
+    steps:
+      - checkout
+
+      - run:
+          name: Update and Install Dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y wget software-properties-common apt-transport-https
+
+      - run:
+          name: Import Microsoft GPG Key
+          command: |
+            wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-archive-keyring.gpg
+
+      - run:
+          name: Add Microsoft Edge Repository
+          command: |
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/edge stable main" | sudo tee /etc/apt/sources.list.d/microsoft-edge-stable.list
+
+      - run:
+          name: Update Package List Again
+          command: sudo apt-get update
+
+      - run:
+          name: Install Microsoft Edge
+          command: sudo apt-get install -y microsoft-edge-stable
+
+      - run:
+          name: Verify Installation
+          command: |
+            if command -v microsoft-edge >/dev/null 2>&1; then
+              echo "Microsoft Edge installed successfully."
+              microsoft-edge --version
+            else
+              echo "Microsoft Edge installation failed." >&2
+              exit 1
+            fi
+
+workflows:
+  version: 2
+  install_and_verify:
+    jobs:
+      - install_edge
